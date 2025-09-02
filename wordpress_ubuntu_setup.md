@@ -227,14 +227,14 @@ define('WP_REDIS_READ_TIMEOUT', 1);
 define('WP_REDIS_DATABASE', 0);
 
 // Security keys (generate from https://api.wordpress.org/secret-key/1.1/salt/)
-define('AUTH_KEY',         'your-unique-phrase-here');
-define('SECURE_AUTH_KEY',  'your-unique-phrase-here');
-define('LOGGED_IN_KEY',    'your-unique-phrase-here');
-define('NONCE_KEY',        'your-unique-phrase-here');
-define('AUTH_SALT',        'your-unique-phrase-here');
-define('SECURE_AUTH_SALT', 'your-unique-phrase-here');
-define('LOGGED_IN_SALT',   'your-unique-phrase-here');
-define('NONCE_SALT',       'your-unique-phrase-here');
+define('AUTH_KEY',         'a+{`?oPPE,Q6y+3n`HLQ?;RYA-VHn++6RGk-4xaV1zN#)&p[-zT]/BrYQ[)l$yim');
+define('SECURE_AUTH_KEY',  '$*d-[,KWQ? &D+>TCXT{W_+Ext2q56h.R6;VM:+*Y^ltYK.y$<cXMg.=G/wRm1rR');
+define('LOGGED_IN_KEY',    'sHR)a||zF8Tk`1&gd?-n0eiM1:9.9:~2a7[z1s0NE(YO9[(`hq[ sptvG%v,o`ht');
+define('NONCE_KEY',        'StTsi~Us)rOD=Ap-+1k/)d?=cMcU~?m+fytW^m2)3klImdQ[YQHh]dN}9pJ~*^P}');
+define('AUTH_SALT',        'a5,*kM-7RRD]@?+$wgIRd$7Qfn<k[+3#sZWi9{~&q&|`x#2`WgY5ki-~p/|9Po|6');
+define('SECURE_AUTH_SALT', '$9,V-pPrGk0]ZBFoJrqB|p<?}=b.^3 zrv7QE|yr(0gb)oZFdSoI-svJ14$Jb+MX');
+define('LOGGED_IN_SALT',   'o.Db>JAu&vqz*g!1T$C}*~@8&`Ofiqu&=gX~k~O+Eo{~V^Op+OO-kF-/z?+)nY[^');
+define('NONCE_SALT',       'bs^%M 7/FZ)q?||}8HX#5<x7[Zx`=lABj:+,)AF_FuBr02.fv&WdKStYja|(5E:U');
 ```
 
 ## Step 8: Install Redis Object Cache Plugin
