@@ -227,25 +227,24 @@ define('WP_REDIS_READ_TIMEOUT', 1);
 define('WP_REDIS_DATABASE', 0);
 
 // Security keys (generate from https://api.wordpress.org/secret-key/1.1/salt/)
-define('AUTH_KEY',         'a+{`?oPPE,Q6y+3n`HLQ?;RYA-VHn++6RGk-4xaV1zN#)&p[-zT]/BrYQ[)l$yim');
-define('SECURE_AUTH_KEY',  '$*d-[,KWQ? &D+>TCXT{W_+Ext2q56h.R6;VM:+*Y^ltYK.y$<cXMg.=G/wRm1rR');
-define('LOGGED_IN_KEY',    'sHR)a||zF8Tk`1&gd?-n0eiM1:9.9:~2a7[z1s0NE(YO9[(`hq[ sptvG%v,o`ht');
-define('NONCE_KEY',        'StTsi~Us)rOD=Ap-+1k/)d?=cMcU~?m+fytW^m2)3klImdQ[YQHh]dN}9pJ~*^P}');
-define('AUTH_SALT',        'a5,*kM-7RRD]@?+$wgIRd$7Qfn<k[+3#sZWi9{~&q&|`x#2`WgY5ki-~p/|9Po|6');
-define('SECURE_AUTH_SALT', '$9,V-pPrGk0]ZBFoJrqB|p<?}=b.^3 zrv7QE|yr(0gb)oZFdSoI-svJ14$Jb+MX');
-define('LOGGED_IN_SALT',   'o.Db>JAu&vqz*g!1T$C}*~@8&`Ofiqu&=gX~k~O+Eo{~V^Op+OO-kF-/z?+)nY[^');
-define('NONCE_SALT',       'bs^%M 7/FZ)q?||}8HX#5<x7[Zx`=lABj:+,)AF_FuBr02.fv&WdKStYja|(5E:U');
+define('AUTH_KEY',         'your-unique-phrase-here');
+define('SECURE_AUTH_KEY',  'your-unique-phrase-here');
+define('LOGGED_IN_KEY',    'your-unique-phrase-here');
+define('NONCE_KEY',        'your-unique-phrase-here');
+define('AUTH_SALT',        'your-unique-phrase-here');
+define('SECURE_AUTH_SALT', 'your-unique-phrase-here');
+define('LOGGED_IN_SALT',   'your-unique-phrase-here');
+define('NONCE_SALT',       'your-unique-phrase-here');
 ```
 
-## Step 8: Install Redis Object Cache Plugin
+## Step 8: Final WordPress File Permissions
 
-### Download Redis Object Cache Plugin
+### Ensure Proper Ownership and Permissions
 ```bash
-cd /var/www/wordpress/wp-content/plugins/
-sudo wget https://downloads.wordpress.org/plugin/redis-cache.latest-stable.zip
-sudo unzip redis-cache.latest-stable.zip
-sudo rm redis-cache.latest-stable.zip
-sudo chown -R www-data:www-data redis-cache/
+sudo chown -R www-data:www-data /var/www/wordpress/
+sudo find /var/www/wordpress/ -type d -exec chmod 755 {} \;
+sudo find /var/www/wordpress/ -type f -exec chmod 644 {} \;
+sudo chmod 600 /var/www/wordpress/wp-config.php
 ```
 
 ## Step 9: Install and Configure Let's Encrypt SSL Certificates
@@ -366,18 +365,65 @@ sudo systemctl status redis-server
 ## Step 13: Complete WordPress Setup
 
 1. Navigate to **https://csslosa.com** (or any of your configured domains) in a web browser
-2. Follow the WordPress installation wizard:
-   - Choose language
-   - Enter site title, admin username, password, and email
-   - Click "Install WordPress"
+2. **SUCCESS INDICATOR:** If you see the WordPress installation screen, your setup is working correctly! This confirms:
+   - ✅ Nginx is serving the site properly
+   - ✅ PHP 8.2 is processing requests
+   - ✅ MariaDB database connection is established
+   - ✅ All domains are accessible
+   - ✅ SSL certificates are active (if configured)
 
-## Step 14: Activate Redis Object Cache
+3. Follow the WordPress installation wizard:
+   - **Choose language**
+   - **Enter site information:**
+     - Site Title (can be changed later)
+     - Username (**avoid "admin"** for security - use something unique)
+     - Strong password (WordPress will suggest one)
+     - Your email address
+   - **Click "Install WordPress"**
 
-1. Log into WordPress admin panel
-2. Go to **Plugins > Installed Plugins**
-3. Activate **Redis Object Cache**
-4. Go to **Settings > Redis**
-5. Click **Enable Object Cache**
+4. **After successful installation**, you'll see a success message with login details
+
+## Step 14: Post-Installation Verification
+
+### Verify System Services
+After WordPress installation, verify all services are running correctly:
+
+```bash
+# Check all services status
+sudo systemctl status nginx php8.2-fpm mariadb redis-server
+
+# Verify WordPress can connect to database
+mysql -u wp_user -p wordpress_db -e "SELECT 'Database connection successful';"
+
+# Test Redis connection
+redis-cli ping
+# Should return: PONG
+
+# Check Redis memory usage
+redis-cli info memory
+
+# Test all configured domains
+for domain in csslosa.com csslosa.ng comlagalumni.org comlagalumni.ng; do
+    echo "Testing $domain:"
+    curl -I "https://$domain" 2>/dev/null | head -1
+done
+```
+
+### Performance Monitoring Commands
+```bash
+# Monitor system resources
+htop
+
+# Check PHP-FPM processes
+sudo ps aux | grep php-fpm
+
+# Monitor Nginx connections
+sudo ss -tuln | grep :80
+sudo ss -tuln | grep :443
+
+# Check disk usage
+df -h /var/www/wordpress/
+```
 
 ## Step 15: Performance Optimization (Optional)
 
@@ -413,6 +459,103 @@ query_cache_size = 32M
 sudo systemctl restart php8.2-fpm
 sudo systemctl restart mariadb
 ```
+
+## Step 16: Final System Verification
+
+### Complete System Health Check
+```bash
+# Verify all services are running
+sudo systemctl status nginx php8.2-fpm mariadb redis-server
+
+# Test database connectivity
+mysql -u wp_user -p wordpress_db -e "SHOW TABLES;" 2>/dev/null && echo "Database: ✅ Connected"
+
+# Test Redis connectivity  
+redis-cli ping > /dev/null && echo "Redis: ✅ Connected"
+
+# Check SSL certificates status
+sudo certbot certificates
+
+# Verify domain resolution
+for domain in csslosa.com csslosa.ng comlagalumni.org comlagalumni.ng; do
+    echo -n "$domain: "
+    dig +short $domain | head -1
+done
+
+# Check Nginx configuration syntax
+sudo nginx -t
+
+# Test PHP processing
+echo "<?php phpinfo(); ?>" | sudo tee /var/www/wordpress/info.php > /dev/null
+echo "PHP test file created at: https://csslosa.com/info.php"
+echo "⚠️  Remove this file after testing: sudo rm /var/www/wordpress/info.php"
+```
+
+### Performance Baseline Commands
+```bash
+# Check current resource usage
+echo "=== System Resources ==="
+free -h
+df -h /var/www/wordpress/
+echo ""
+
+echo "=== Redis Memory Usage ==="
+redis-cli info memory | grep used_memory_human
+
+echo ""
+echo "=== Active Connections ==="
+sudo ss -tuln | grep -E ':(80|443|3306|6379)'
+
+echo ""
+echo "=== PHP-FPM Process Count ==="
+sudo ps aux | grep php-fpm | grep -v grep | wc -l
+```
+
+## Installation Complete! 🎉
+
+### What You've Successfully Set Up:
+- ✅ **Ubuntu Server** with latest security updates
+- ✅ **MariaDB** database with WordPress-optimized configuration  
+- ✅ **PHP 8.2** with all required extensions and Redis support
+- ✅ **Nginx** web server with security headers and caching
+- ✅ **Redis** server for object caching and performance
+- ✅ **Let's Encrypt SSL** certificates for all 4 domains with auto-renewal
+- ✅ **WordPress** core files with secure permissions
+- ✅ **Multi-domain support** for csslosa.com, csslosa.ng, comlagalumni.org, comlagalumni.ng
+- ✅ **Firewall protection** with UFW
+- ✅ **System optimization** for production use
+
+### Success Indicators:
+1. **WordPress installation screen appears** when visiting any configured domain
+2. **SSL certificates are active** (green padlock in browser)
+3. **All system services are running** without errors
+4. **Database connectivity confirmed** 
+5. **Redis caching operational**
+
+### Next Steps (WordPress Admin Level):
+Once WordPress installation is completed through the web interface:
+- Access wp-admin with your created credentials
+- Install and configure Redis Object Cache plugin for optimal performance
+- Install security plugins as needed
+- Configure WordPress settings according to your requirements
+
+### Maintenance Commands to Remember:
+```bash
+# Check system status
+sudo systemctl status nginx php8.2-fpm mariadb redis-server
+
+# Monitor performance
+htop
+redis-cli info memory
+
+# SSL renewal (automatic, but manual check)
+sudo certbot certificates
+
+# Update system packages
+sudo apt update && sudo apt upgrade -y
+```
+
+The server infrastructure is now production-ready and optimized for high-performance WordPress hosting across multiple domains.
 
 ## Important DNS Configuration Requirements
 
